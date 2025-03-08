@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickTix</title>
+  <link rel="stylesheet" href="./index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+  <div class="card">
+    <div class="title-container">
+      <i class="fa-solid fa-ticket"></i>
+      <h1>Book Your Event Ticket</h1>
+    </div>
+  
+    <p>Secure your spot at the event by booking your tickets now!</p>
+
+    <form id="ticketForm" action="/pay" method="GET">
+      <div class="form-group">
+        <label for="event">Select Event</label>
+        <div class="input-wrapper">
+          <span class="event-icon"><i class="fa-solid fa-calendar-check"></i></span>
+          <select id="event" name="event" required onchange="calculateAmount()">
+            <option value="" disabled selected>Select an event</option>
+            <option value="concert">Concert</option>
+            <option value="conference">Conference</option>
+            <option value="workshop">Workshop</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="amount">Number of Tickets</label>
+        <div class="amount-presets">
+          <button type="button" class="preset-btn" onclick="setTicketCount(1)">1</button>
+          <button type="button" class="preset-btn" onclick="setTicketCount(3)">3</button>
+          <button type="button" class="preset-btn" onclick="setTicketCount(5)">5</button>
+        </div>
+        <div class="input-wrapper">
+          <span class="ticket-icon"><i class="fa-solid fa-ticket"></i></span>
+          <input type="number" id="tickets" name="tickets" class="ticket-input" placeholder="Enter number of tickets" required min="1" step="1" oninput="calculateAmount()">
+        </div>
+        <div id="ticketError" class="error-message">Please enter a valid number of tickets</div>
+      </div>
+
+      <div class="form-group">
+        <label for="totalAmount">Total Amount</label>
+        <div class="input-wrapper">
+          <span class="event-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+          <input style="padding-left: 35px" type="text" id="totalAmount" name="amount" readonly>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+      </div>
+      <div id="nameError" class="error-message">Please enter a valid name</div>
+
+
+      <div class="form-group">
+        <label for="email">Your Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+      </div>
+      <div id="emailError" class="error-message">Please enter a valid email</div>
+
+      <div class="form-group">
+        <label for="contact">Your Contact</label>
+        <input type="tel" id="contact" name="contact" placeholder="Enter your phone number" required>
+      </div>
+      <div id="contactError" class="error-message">Please enter a valid contact</div>
+
+      <button type="submit" class="btn" id="submitBtn">Book Now</button>
+
+      <div class="secure-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Secure Payment
+      </div>
+    </form>
+
+    <div class="footer">
+      Thank you for booking your tickets. Enjoy the event!
+    </div>
+  </div>
+
+  <div class="loader-overlay" id="loaderOverlay">
+    <div class="loader"></div>
+    <div class="loader-text">Processing your booking...</div>
+    <p style="text-align: center; padding: 10px;">Redirecting to the payment gateway</p>
+  </div>
+
+  <script>
+    const eventDetails = {
+      concert: { price: 50 },
+      conference: { price: 100 },
+      workshop: { price: 30 }
+    };
+
+    function setTicketCount(value) {
+      document.getElementById('tickets').value = value;
+      document.getElementById('tickets').classList.remove('error');
+      document.getElementById('ticketError').style.display = 'none';
+      calculateAmount();
+      const buttons = document.querySelectorAll('.preset-btn');
+      buttons.forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function calculateAmount() {
+      const event = document.getElementById('event').value;
+      const tickets = document.getElementById('tickets').value;
+      if (event && tickets) {
+        const totalAmount = eventDetails[event].price * tickets;
+        document.getElementById('totalAmount').value = `${totalAmount}`;
+      } else {
+        document.getElementById('totalAmount').value = '';
+      }
+    }
+
+    document.getElementById('ticketForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      let isValid = true;
+
+      const tickets = document.getElementById('tickets');
+      if (!tickets.value || tickets.value < 1) {
+        tickets.classList.add('error');
+        document.getElementById('ticketError').style.display = 'block';
+        isValid = false;
+      } else {
+        tickets.classList.remove('error');
+        document.getElementById('ticketError').style.display = 'none';
+      }
+
+      const name = document.getElementById('name');
+      if (!name.value.trim()) {
+        name.classList.add('error');
+        document.getElementById('nameError').style.display = 'block';
+        isValid = false;
+      } else {
+        name.classList.remove('error');
+        document.getElementById('nameError').style.display = 'none';
+      }
+
+      const email = document.getElementById('email');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email.value || !emailRegex.test(email.value)) {
+        email.classList.add('error');
+        document.getElementById('emailError').style.display = 'block';
+        isValid = false;
+      } else {
+        email.classList.remove('error');
+        document.getElementById('emailError').style.display = 'none';
+      }
+
+      const contact = document.getElementById('contact');
+      const phoneRegex = /^\d{10}$/;
+      if (!contact.value || !phoneRegex.test(contact.value)) {
+        contact.classList.add('error');
+        document.getElementById('contactError').style.display = 'block';
+        isValid = false;
+      } else {
+        contact.classList.remove('error');
+        document.getElementById('contactError').style.display = 'none';
+      }
+
+      if (isValid) {
+        document.getElementById('loaderOverlay').classList.add('active');
+        setTimeout(() => {
+          this.submit();
+        }, 1500);
+      }
+    });
+
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('input', function() {
+        this.classList.remove('error');
+        const errorId = this.id + 'Error';
+        if (document.getElementById(errorId)) {
+          document.getElementById(errorId).style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
